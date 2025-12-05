@@ -16,14 +16,17 @@ namespace SODV2101
         private TasksControl tasksControl;
         private CalendarControl calendarControl;
 
+        // Constructor for MainForm
         public MainForm()
         {
             InitializeComponent();
             lnkDashboard_Click(this, EventArgs.Empty); // Show dashboard on startup
         }
 
+        // InitializeComponent method to set up the form
         private void InitializeComponent()
         {
+            // FORM PROPERTIES
             this.Text = "Study Planner";
             this.StartPosition = FormStartPosition.CenterScreen;
             this.BackColor = Color.FromArgb(246, 247, 251);
@@ -76,26 +79,12 @@ namespace SODV2101
             };
             lnkCalendar.Click += lnkCalendar_Click;
 
-            lnkViewCompleted = new LinkLabel
-            {
-                Text = "View Completed",
-                Font = new Font("Segoe UI", 9),
-                AutoSize = true,
-                LinkBehavior = LinkBehavior.NeverUnderline,
-                Anchor = AnchorStyles.Top | AnchorStyles.Right,
-                Location = new Point(this.ClientSize.Width - 120, 17)
-            };
-
+            // ADD CONTROLS TO TOP NAV PANEL
             topNavPanel.Controls.Add(lblAppTitle);
             topNavPanel.Controls.Add(lnkDashboard);
             topNavPanel.Controls.Add(lnkTasks);
             topNavPanel.Controls.Add(lnkCalendar);
             topNavPanel.Controls.Add(lnkViewCompleted);
-
-            this.Resize += (s, e) =>
-            {
-                lnkViewCompleted.Location = new Point(this.ClientSize.Width - 120, 17);
-            };
 
             // Main Content Panel
             mainContentPanel = new Panel
@@ -109,6 +98,7 @@ namespace SODV2101
             tasksControl = new TasksControl { Dock = DockStyle.Fill };
             calendarControl = new CalendarControl { Dock = DockStyle.Fill };
 
+            // ADD USER CONTROLS TO MAIN CONTENT PANEL
             mainContentPanel.Controls.Add(dashboardControl);
             mainContentPanel.Controls.Add(tasksControl);
             mainContentPanel.Controls.Add(calendarControl);
@@ -118,24 +108,28 @@ namespace SODV2101
             this.Controls.Add(topNavPanel);
         }
 
+        // Event Handlers for Link Clicks
         private void lnkDashboard_Click(object sender, EventArgs e)
         {
             dashboardControl.BringToFront();
             UpdateLinkFonts(lnkDashboard);
         }
 
+        // Event Handlers for Link Clicks
         private void lnkTasks_Click(object sender, EventArgs e)
         {
             tasksControl.BringToFront();
             UpdateLinkFonts(lnkTasks);
         }
 
+        // Event Handlers for Link Clicks
         private void lnkCalendar_Click(object sender, EventArgs e)
         {
             calendarControl.BringToFront();
             UpdateLinkFonts(lnkCalendar);
         }
 
+        // Update the fonts of the navigation links
         private void UpdateLinkFonts(LinkLabel activeLink)
         {
             lnkDashboard.Font = new Font("Segoe UI", 9, FontStyle.Regular);

@@ -1,12 +1,14 @@
 using System.ComponentModel;
 using Task = SODV2101.Models.Task;
 using TaskStatus = SODV2101.Enums.TaskStatus;
-using TaskPriority = SODV2101.Enums.TaskPriority;
+using SODV2101.Repositories;
 
 namespace SODV2101
 {
     public class DashboardControl : UserControl
     {
+
+        // UI Components
         private Panel panelUpcoming;
         private Label lblUpcomingTitle;
         private DataGridView dgvUpcoming;
@@ -27,14 +29,76 @@ namespace SODV2101
         private Label lblCalendarTitle;
         private MonthCalendar monthCalendar;
 
+        // Constructor for DashboardControl
         public DashboardControl()
         {
             InitializeComponent();
-            PopulateSampleData();
+            // Subscribe to repository updates
+            TaskRepository.TaskChanged += OnTasksChanged;
+            InitDashboardData();
         }
 
+        // Unsubscribe from events to prevent memory leaks
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                TaskRepository.TaskChanged -= OnTasksChanged;
+            }
+            base.Dispose(disposing);
+        }
+
+        // Handle task changes
+        private void OnTasksChanged()
+        {
+            // Recompute dashboard when tasks change
+            InitDashboardData();
+        }
+
+        private void InitDashboardData()
+        {
+            // get all tasks
+            List<Task> tasks = TaskRepository.Tasks;
+
+            // total tasks
+            lblTotalTasksValue.Text = tasks.Count.ToString();
+
+            // upcoming tasks in next 7 days
+
+            DateTime today = DateTime.Today;
+            DateTime weekFromToday = today.AddDays(7);
+            var upcoming = tasks.Where(t => t.DueDate >= today && t.DueDate <= weekFromToday)
+                                .OrderBy(t => t.DueDate)
+                                .ToList();
+            upcomingTasks.Clear();
+            foreach (var task in upcoming)
+            {
+                upcomingTasks.Add(task);
+            }
+
+            // tasks due today
+            int dueTodayCount = tasks.Count(t => t.DueDate.Date == today);
+
+            lblTasksDueTodayValue.Text = dueTodayCount.ToString();
+
+            // tasks completed this week
+            DateTime startOfWeek = today.AddDays(-(int)today.DayOfWeek);
+            int completedThisWeekCount = tasks.Count(t => t.Status == TaskStatus.Completed && t.DueDate.Date >= startOfWeek && t.DueDate.Date <= today);
+            lblTasksCompletedWeekValue.Text = completedThisWeekCount.ToString();
+
+            // overdue tasks
+            int overdueCount = tasks.Count(t => t.DueDate.Date < today && t.Status != TaskStatus.Completed);
+            lblOverdueTasksValue.Text = overdueCount.ToString();
+
+            // Refresh DataGridView
+
+            dgvUpcoming.Refresh();
+        }
+
+        // Initialize UI components
         private void InitializeComponent()
         {
+            // make dock fill and light background
             this.Dock = DockStyle.Fill;
             this.BackColor = Color.FromArgb(246, 247, 251);
 
@@ -43,6 +107,7 @@ namespace SODV2101
             panelProgress.Location = new Point(15, 15);
             panelProgress.Size = new Size(330, 220);
 
+            // Progress Labels
             lblProgressTitle = new Label
             {
                 Text = "Your Progress",
@@ -51,16 +116,19 @@ namespace SODV2101
                 Location = new Point(15, 15)
             };
 
+            // Stats Labels
             lblTasksDueToday = new Label { Text = "Tasks due today", Location = new Point(20, 50), AutoSize = true, Font = new Font("Segoe UI", 9) };
-            lblTasksDueTodayValue = new Label { Text = "2", AutoSize = true, Font = new Font("Segoe UI", 9, FontStyle.Bold), Location = new Point(260, 50) };
+            lblTasksDueTodayValue = new Label { Text = "0", AutoSize = true, Font = new Font("Segoe UI", 9, FontStyle.Bold), Location = new Point(260, 50) };
             lblTasksCompletedWeek = new Label { Text = "Tasks completed this week", Location = new Point(20, 75), AutoSize = true, Font = new Font("Segoe UI", 9) };
-            lblTasksCompletedWeekValue = new Label { Text = "5", AutoSize = true, Font = new Font("Segoe UI", 9, FontStyle.Bold), Location = new Point(260, 75) };
+            lblTasksCompletedWeekValue = new Label { Text = "0", AutoSize = true, Font = new Font("Segoe UI", 9, FontStyle.Bold), Location = new Point(260, 75) };
             lblOverdueTasks = new Label { Text = "Overdue tasks", Location = new Point(20, 100), AutoSize = true, Font = new Font("Segoe UI", 9) };
-            lblOverdueTasksValue = new Label { Text = "1", AutoSize = true, Font = new Font("Segoe UI", 9, FontStyle.Bold), Location = new Point(260, 100) };
+            lblOverdueTasksValue = new Label { Text = "0", AutoSize = true, Font = new Font("Segoe UI", 9, FontStyle.Bold), Location = new Point(260, 100) };
 
+            // Total Tasks
             lblTotalTasks = new Label { Text = "Total tasks", Location = new Point(20, 125), AutoSize = true, Font = new Font("Segoe UI", 9) };
             lblTotalTasksValue = new Label { Text = "0", AutoSize = true, Font = new Font("Segoe UI", 9, FontStyle.Bold), Location = new Point(260, 125) };
 
+            // Add labels to Progress panel
             panelProgress.Controls.Add(lblProgressTitle);
             panelProgress.Controls.Add(lblTasksDueToday);
             panelProgress.Controls.Add(lblTasksDueTodayValue);
@@ -105,6 +173,8 @@ namespace SODV2101
 
             upcomingTasks = new BindingList<Task>();
 
+
+            // Initialize DataGridView for Upcoming Tasks
             dgvUpcoming = new DataGridView
             {
                 Location = new Point(18, 40),
@@ -123,6 +193,7 @@ namespace SODV2101
                 DataSource = upcomingTasks
             };
 
+
             dgvUpcoming.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 9, FontStyle.Bold);
             dgvUpcoming.ColumnHeadersDefaultCellStyle.BackColor = Color.White;
             dgvUpcoming.ColumnHeadersDefaultCellStyle.ForeColor = Color.Black;
@@ -138,10 +209,12 @@ namespace SODV2101
             panelUpcoming.Controls.Add(lblUpcomingTitle);
             panelUpcoming.Controls.Add(dgvUpcoming);
 
+            // Add panels to DashboardControl
             this.Controls.Add(panelProgress);
             this.Controls.Add(panelCalendar);
             this.Controls.Add(panelUpcoming);
 
+            // Handle resizing
             this.Resize += (s, e) =>
             {
                 panelUpcoming.Size = new Size(this.Width - 30, this.Height - 265);
@@ -149,6 +222,7 @@ namespace SODV2101
             };
         }
 
+        // Helper method to create styled card panels
         private Panel CreateCardPanel()
         {
             return new Panel
@@ -159,15 +233,7 @@ namespace SODV2101
                 Margin = new Padding(10)
             };
         }
+       
 
-        private void PopulateSampleData()
-        {
-            upcomingTasks.Clear();
-            upcomingTasks.Add(new Task { DueDate = DateTime.Parse("Nov 30, 2023"), Title = "Submit proposal", Subject = "KIN 231", Status = TaskStatus.InProgress, Priority = TaskPriority.High });
-            upcomingTasks.Add(new Task { DueDate = DateTime.Parse("Dec 1, 2023"), Title = "Read Chapter 4", Subject = "CHEM 115", Status = TaskStatus.Pending, Priority = TaskPriority.Medium });
-            upcomingTasks.Add(new Task { DueDate = DateTime.Parse("Dec 3, 2023"), Title = "Plan presentation", Subject = "PSYC 121", Status = TaskStatus.Pending, Priority = TaskPriority.Low });
-
-            lblTotalTasksValue.Text = upcomingTasks.Count.ToString();
-        }
     }
 }

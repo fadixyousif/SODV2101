@@ -1,30 +1,90 @@
 using System.ComponentModel;
 using Task = SODV2101.Models.Task;
-using TaskStatus = SODV2101.Enums.TaskStatus;
-using TaskPriority = SODV2101.Enums.TaskPriority;
+using SODV2101.Repositories;
 
 namespace SODV2101
 {
     public class CalendarControl : UserControl
     {
+        // UI Components
         private Label lblCalendarTitle;
         private MonthCalendar monthCalendar;
         private DataGridView dgvSchedule;
         private BindingList<Task> scheduledTasks;
 
+        // Constructor for CalendarControl
         public CalendarControl()
         {
             InitializeComponent();
-            PopulateSampleData();
+            // subscribe to task changes so calendar updates on add/delete/complete
+            TaskRepository.TaskChanged += OnTasksChanged;
+            InitCurrentSchedule();
         }
 
+        // Dispose pattern to unsubscribe from events
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                TaskRepository.TaskChanged -= OnTasksChanged;
+            }
+            base.Dispose(disposing);
+        }
+
+        // Event handler for task changes
+        private void OnTasksChanged()
+        {
+            // reload based on current selection
+            LoadTasksForSelectedDate();
+        }
+
+        // Initialize current day's schedule
+        public void InitCurrentSchedule()
+        {
+            // clear existing tasks
+            scheduledTasks.Clear();
+
+            // get today's date without time component
+            DateTime now = DateTime.Now.Date;
+
+            // load tasks for today
+            foreach (var task in TaskRepository.GetTasksDate(now))
+            {
+                scheduledTasks.Add(task);
+            }
+        }
+
+        // Load tasks for the selected date in the calendar
+        public void LoadTasksForSelectedDate()
+        {
+            // get selected date
+            DateTime selectedDate = monthCalendar.SelectionStart.Date;
+
+            // clear existing tasks
+            scheduledTasks.Clear();
+
+            // load tasks for selected date
+            foreach (var task in TaskRepository.GetTasksDate(selectedDate))
+            {
+                // add tasks for the selected date
+                scheduledTasks.Add(task);
+            }
+
+            // refresh the DataGridView
+            dgvSchedule.Refresh();
+        }
+
+        // Initialize UI components
         private void InitializeComponent()
         {
+            // make dock fill and light background
             this.Dock = DockStyle.Fill;
             this.BackColor = Color.FromArgb(246, 247, 251);
 
+            // main panel to hold all controls
             var mainPanel = new Panel { Dock = DockStyle.Fill, Padding = new Padding(15) };
 
+            // Calendar title label
             lblCalendarTitle = new Label
             {
                 Text = "Study Schedule",
@@ -33,14 +93,20 @@ namespace SODV2101
                 Location = new Point(15, 15)
             };
 
+            // MonthCalendar setup
             monthCalendar = new MonthCalendar
             {
                 Location = new Point(20, 50),
                 MaxSelectionCount = 31
             };
 
+            // Event handler for date selection
+            monthCalendar.DateSelected += (s, e) => LoadTasksForSelectedDate();
+
+            // DataGridView setup
             scheduledTasks = new BindingList<Task>();
 
+            // DataGridView setup
             dgvSchedule = new DataGridView
             {
                 Location = new Point(20, 230),
@@ -58,31 +124,26 @@ namespace SODV2101
             };
             dgvSchedule.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 9, FontStyle.Bold);
 
+            // Define DataGridView columns
             dgvSchedule.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "DueDate", HeaderText = "Date", DefaultCellStyle = new DataGridViewCellStyle { Format = "d" } });
             dgvSchedule.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "Title", HeaderText = "Title" });
             dgvSchedule.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "Subject", HeaderText = "Course Name" });
             dgvSchedule.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "Status", HeaderText = "Status" });
             dgvSchedule.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "Priority", HeaderText = "Priority" });
 
+            // Add controls to main panel
             mainPanel.Controls.Add(lblCalendarTitle);
             mainPanel.Controls.Add(monthCalendar);
             mainPanel.Controls.Add(dgvSchedule);
 
+            // Add main panel to UserControl
             this.Controls.Add(mainPanel);
 
+            // Handle resizing to adjust DataGridView size
             this.Resize += (s, e) =>
             {
                 dgvSchedule.Size = new Size(this.Width - 60, this.Height - 280);
             };
-        }
-
-        private void PopulateSampleData()
-        {
-            scheduledTasks.Clear();
-            scheduledTasks.Add(new Task { DueDate = DateTime.Parse("Nov 30, 2023"), Title = "Submit proposal", Subject = "KIN 231", Status = TaskStatus.InProgress, Priority = TaskPriority.High });
-            scheduledTasks.Add(new Task { DueDate = DateTime.Parse("Dec 1, 2023"), Title = "Read Chapter 4", Subject = "CHEM 115", Status = TaskStatus.Pending, Priority = TaskPriority.Medium });
-            scheduledTasks.Add(new Task { DueDate = DateTime.Parse("Dec 3, 2023"), Title = "Plan presentation", Subject = "PSYC 121", Status = TaskStatus.Pending, Priority = TaskPriority.Low });
-            scheduledTasks.Add(new Task { DueDate = DateTime.Parse("Dec 5, 2023"), Title = "Start final project", Subject = "CHEM 115", Status = TaskStatus.Pending, Priority = TaskPriority.Medium });
         }
     }
 }

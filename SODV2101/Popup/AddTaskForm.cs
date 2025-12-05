@@ -1,3 +1,4 @@
+using SODV2101.Repositories;
 using Task = SODV2101.Models.Task;
 using TaskPriority = SODV2101.Enums.TaskPriority;
 using TaskStatus = SODV2101.Enums.TaskStatus;
@@ -6,13 +7,14 @@ namespace SODV2101
 {
     public class AddTaskForm : Form
     {
+        // UI Components
         private Label lblAddTaskTitle;
         private Label lblTitle;
         private TextBox txtTitle;
         private Label lblDescription;
         private RichTextBox txtDescription;
         private Label lblSubject;
-        private ComboBox cboSubject;
+        private TextBox cboSubject;
         private Label lblDueDate;
         private DateTimePicker dtpDueDate;
         private Label lblPriority;
@@ -20,16 +22,21 @@ namespace SODV2101
         private Button btnCancel;
         private Button btnSave;
 
+        // Public property to access the created task
         public Task Task { get; private set; }
 
+        // Constructor for AddTaskForm
         public AddTaskForm()
         {
             InitializeComponent();
             cboPriority.DataSource = Enum.GetValues(typeof(TaskPriority));
         }
 
+        // Initialize UI components 
         private void InitializeComponent()
         {
+
+            // Form properties
             this.Text = "Add New Task";
             this.StartPosition = FormStartPosition.CenterParent;
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
@@ -38,6 +45,7 @@ namespace SODV2101
             this.MaximizeBox = false;
             this.MinimizeBox = false;
 
+            // Main Panel (Card)
             var cardPanel = new Panel
             {
                 BackColor = Color.White,
@@ -47,6 +55,7 @@ namespace SODV2101
                 Dock = DockStyle.Fill
             };
 
+            // Add Task Title Label
             lblAddTaskTitle = new Label
             {
                 Text = "Add Task",
@@ -55,6 +64,7 @@ namespace SODV2101
                 Location = new Point(15, 15)
             };
 
+            // Form Controls
             int leftCol = 35;
             int controlWidth = 580;
 
@@ -65,7 +75,7 @@ namespace SODV2101
             txtDescription = new RichTextBox { Location = new Point(leftCol, 125), Width = controlWidth, Height = 120 };
 
             lblSubject = new Label { Text = "Subject", Location = new Point(leftCol, 255), AutoSize = true };
-            cboSubject = new ComboBox { Location = new Point(leftCol, 275), Width = controlWidth, DropDownStyle = ComboBoxStyle.DropDown };
+            cboSubject = new TextBox { Location = new Point(leftCol, 275), Width = controlWidth };
 
             lblDueDate = new Label { Text = "Due Date", Location = new Point(leftCol, 310), AutoSize = true };
             dtpDueDate = new DateTimePicker { Location = new Point(leftCol, 330), Width = controlWidth };
@@ -97,8 +107,10 @@ namespace SODV2101
                 Location = new Point(leftCol + 150, 440)
             };
             btnSave.FlatAppearance.BorderSize = 0;
+            // Save button click event
             btnSave.Click += btnSave_Click;
 
+            // Add controls to card panel
             cardPanel.Controls.Add(lblAddTaskTitle);
             cardPanel.Controls.Add(lblTitle);
             cardPanel.Controls.Add(txtTitle);
@@ -113,17 +125,21 @@ namespace SODV2101
             cardPanel.Controls.Add(btnCancel);
             cardPanel.Controls.Add(btnSave);
 
+            // Add card panel to form
             this.Controls.Add(cardPanel);
         }
 
+        // Save button click event handler
         private void btnSave_Click(object sender, EventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(txtTitle.Text) || string.IsNullOrWhiteSpace(cboSubject.Text) || cboPriority.SelectedItem == null)
+            // Basic validation
+            if (string.IsNullOrWhiteSpace(txtTitle.Text))
             {
-                MessageBox.Show("Please fill in all required fields (Title, Subject, Priority).", "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Please fill in all required fields (Title).", "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
+            // Create new Task object
             Task = new Task
             {
                 Title = txtTitle.Text,
@@ -134,6 +150,7 @@ namespace SODV2101
                 Status = TaskStatus.Pending
             };
 
+            // Set dialog result and close form
             this.DialogResult = DialogResult.OK;
             this.Close();
         }
