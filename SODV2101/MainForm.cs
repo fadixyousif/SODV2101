@@ -1,3 +1,5 @@
+using SODV2101.Services;
+
 namespace SODV2101
 {
     public partial class MainForm : Form
@@ -8,7 +10,6 @@ namespace SODV2101
         private LinkLabel lnkDashboard;
         private LinkLabel lnkTasks;
         private LinkLabel lnkCalendar;
-        private LinkLabel lnkViewCompleted;
 
         // The Main content
         private Panel mainContentPanel;
@@ -20,6 +21,7 @@ namespace SODV2101
         public MainForm()
         {
             InitializeComponent();
+            TaskReminderPopup.CheckReminders();
             lnkDashboard_Click(this, EventArgs.Empty); // Show dashboard on startup
         }
 
@@ -84,7 +86,6 @@ namespace SODV2101
             topNavPanel.Controls.Add(lnkDashboard);
             topNavPanel.Controls.Add(lnkTasks);
             topNavPanel.Controls.Add(lnkCalendar);
-            topNavPanel.Controls.Add(lnkViewCompleted);
 
             // Main Content Panel
             mainContentPanel = new Panel
