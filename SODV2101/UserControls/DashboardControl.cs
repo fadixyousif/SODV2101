@@ -24,6 +24,8 @@ namespace SODV2101
         private Label lblTasksCompletedWeekValue;
         private Label lblOverdueTasksValue;
         private Label lblTotalTasksValue;
+        private Label lblCompletion;
+        private Label lblCompletionValue;
 
         private Panel panelCalendar;
         private Label lblCalendarTitle;
@@ -90,6 +92,12 @@ namespace SODV2101
             int overdueCount = tasks.Count(t => t.DueDate.Date < today && t.Status != TaskStatus.Completed);
             lblOverdueTasksValue.Text = overdueCount.ToString();
 
+            // completed and total tasks for completion percentage
+            int completedCount = tasks.Count(t => t.Status == TaskStatus.Completed);
+            int totalCount = tasks.Count;
+            double completionPct = totalCount == 0 ? 0 : (completedCount * 100.0 / totalCount);
+            lblCompletionValue.Text = $"{completionPct:F0}%";
+
             // Refresh DataGridView
 
             dgvUpcoming.Refresh();
@@ -128,6 +136,10 @@ namespace SODV2101
             lblTotalTasks = new Label { Text = "Total tasks", Location = new Point(20, 125), AutoSize = true, Font = new Font("Segoe UI", 9) };
             lblTotalTasksValue = new Label { Text = "0", AutoSize = true, Font = new Font("Segoe UI", 9, FontStyle.Bold), Location = new Point(260, 125) };
 
+            // Completion Percentage
+            lblCompletion = new Label { Text = "Completion", Location = new Point(20, 150), AutoSize = true, Font = new Font("Segoe UI", 9) };
+            lblCompletionValue = new Label { Text = "0%", AutoSize = true, Font = new Font("Segoe UI", 9, FontStyle.Bold), Location = new Point(260, 150) };
+
             // Add labels to Progress panel
             panelProgress.Controls.Add(lblProgressTitle);
             panelProgress.Controls.Add(lblTasksDueToday);
@@ -138,6 +150,8 @@ namespace SODV2101
             panelProgress.Controls.Add(lblOverdueTasksValue);
             panelProgress.Controls.Add(lblTotalTasks);
             panelProgress.Controls.Add(lblTotalTasksValue);
+            panelProgress.Controls.Add(lblCompletion);
+            panelProgress.Controls.Add(lblCompletionValue);
 
             // Calendar
             panelCalendar = CreateCardPanel();
@@ -233,7 +247,5 @@ namespace SODV2101
                 Margin = new Padding(10)
             };
         }
-       
-
     }
 }
