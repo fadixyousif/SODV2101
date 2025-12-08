@@ -41,8 +41,8 @@ namespace SODV2101.Services
             var daysLeft = (task.DueDate.Date - DateTime.Today).Days;
             return daysLeft switch
             {
-                0 => $"• '{task.Title}' ({task.Subject}) is due today.",
-                > 0 and <= 2 => $"• '{task.Title}' ({task.Subject}) is due in {daysLeft} day(s).",
+                0 => $" '{task.Title}'{(String.IsNullOrEmpty(task.Subject) ? "" : $" ({task.Subject})")} is due today.",
+                > 0 and <= 2 => $" '{task.Title}'{(String.IsNullOrEmpty(task.Subject) ? "" : $" ({task.Subject})")} is due in {daysLeft} day(s).",
                 _ => null
             };
         }

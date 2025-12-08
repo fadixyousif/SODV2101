@@ -176,14 +176,25 @@ namespace SODV2101
                 // Confirm deletion
                 if (MessageBox.Show("Are you sure you want to delete this task?", "Confirm Delete", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
                 {
-                    tasks.RemoveAt(e.RowIndex);
-                    TaskRepository.RemoveTask(task);
+                    bool isDeleted = TaskRepository.RemoveTask(task);
+                    if (!isDeleted)
+                    {
+                        MessageBox.Show("Failed to delete the task.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
                 }
             }
             // Complete button clicked
             else if (e.ColumnIndex == dgvTasks.Columns["Complete"].Index)
             {
-                TaskRepository.CompleteTask(task.Id);
+                bool isCompleted = TaskRepository.CompleteTask(task.Id);
+                if (isCompleted)
+                {
+                    dgvTasks.Refresh();
+                }
+                else
+                {
+                    MessageBox.Show("Failed to complete the task.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             }
         }
 
